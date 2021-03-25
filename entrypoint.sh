@@ -1,15 +1,14 @@
 #!/bin/sh
 
-if ["$DATABASE" = "postgres"]
+if [ "$DATABASE" = "postgres" ]
 then
-  echo "Waiting for postgres..."
+    echo "Waiting for postgres..."
 
-  while ! nc -z $SQL_HOST $SQL_PORT; do
+    while ! nc -z $SQL_HOST $SQL_PORT; do
       sleep 0.1
-  done
+    done
 
-  echo "PostgreSQL started"
-
-f1
+    echo "PostgreSQL started"
+fi
 
 exec "$@"

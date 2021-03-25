@@ -1,44 +1,50 @@
 FROM python:3.9 as builder
 
-WORKDIR /usr/src/Rest_News
+WORKDIR /usr/src/app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apt update
-RUN apt upgrade -y && apt install -y postgresql gcc python3-dev musl-dev
+RUN apt-get update
+RUN apt-get upgrade -y && apt-get -y install postgresql gcc python3-dev musl-dev
+
 RUN pip install --upgrade pip
 
 COPY . .
 
-COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --weel-dir /usr/src/Rest_News/wheels -r requirements.txt
+
+COPY ./req.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r req.txt
+
 
 FROM python:3.9
 
-RUN mkdir -p /home/Rest_News
+RUN mkdir -p /home/app
 
-RUN groupadd restnews
-RUN useradd -m -g restnews admin -p Password
-RUN usermod -aG restnews admin
+RUN groupadd app
+RUN useradd -m -g app app -p PASSWORD
+RUN usermod -aG app app
 
-ENV HOME=/home/Rest_News
-ENV APP_HOME=/home/Rest_News/web
-
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
 RUN mkdir $APP_HOME
-WORKDIR %APP_HOME
+#RUN mkdir $APP_HOME/staticfiles
 
-RUN apt update && apt install -y netcat
+WORKDIR $APP_HOME
 
-COPY --from=builder /usr/src/Rest_News/wheels /wheels
-COPY --from=builder /usr/src/Rest_News/requirements.txt .
+RUN apt-get update \
+    && apt-get install -y netcat
+
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/req.txt .
 RUN pip install --no-cache /wheels/*
 
 COPY ./entrypoint.sh $APP_HOME
+
 COPY . $APP_HOME
 
-RUN chown -R admin:admin
+RUN chown -R app:app $APP_HOME
 
-USER admin
+USER app
 
-ENTRYPOINT ["/home/Rest_New/web/entrypoint.sh"]
+ENTRYPOINT ["/home/app/web/entrypoint.sh"]
